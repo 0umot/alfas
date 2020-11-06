@@ -1,81 +1,89 @@
 const Discord = require('discord.js');
-const moment = require('moment')
+const moment = require('moment');
+const os = require('os');
+let cpuStat = require("cpu-stat");
+const { stripIndents } = require('common-tags');
+require('moment-duration-format');
 
-const ayarlar = require('../ayarlar.json');
-
-exports.run = (client, message, params) => {
-  let aylar = {
-			"01": "Ocak",
-			"02": "Şubat",
-			"03": "Mart",
-			"04": "Nisan",
-			"05": "Mayıs",
-			"06": "Haziran",
-			"07": "Temmuz",
-			"08": "Ağustos",
-			"09": "Eylül",
-			"10": "Ekim",
-			"11": "Kasım",
-			"12": "Aralık"
-    }
+exports.run = async (bot, message, args) => {
   
-  let günler = {
-      "0": "Pazar",
-      "1": "Pazartesi",
-      "2": "Salı",
-      "3": "Çarşamba",
-      "4": "Perşembe",
-      "5": "Cuma",
-      "6": "Cumartesi",
-    }
-      var ban = message.guild.fetchBans();
- let guild = message.guild;
-
-
-
-   const embed = new Discord.RichEmbed()
-   .setColor("15f153")
-   .setAuthor(message.guild.name, message.guild.iconURL)
-   .setThumbnail(message.guild.iconURL)
-   .addField('İsim kısaltması:', message.guild.nameAcronym, true)
-   .addField('Sunucu ID:', message.guild.id, true)  
-   .addField('Ana kanal:', message.guild.defaultChannel,true)
-   .addField('AFK kanalı:', message.guild.afkChannel, true)
-   .addField('AFK Zaman Aşımı', `${message.guild.afkTimeout} saniye`,true)
-   .addField('Güvenlik Seviyesi:', message.guild.verificationLevel, true)
-   .addField('Ban Sayısı:',message.guild.fetchBans(bans => bans.size),false)
-   .addField('Kanal Sayısı: ['+message.guild.channels.size+']', `:sound: ${message.guild.channels.filter(chan => chan.type === 'voice').size} :speech_balloon: ${message.guild.channels.filter(chan => chan.type === 'text').size}`, true)
-   .addField('Üye Bilgisi : ['+message.guild.memberCount+']', `${client.emojis.get('647797624598036510')}${message.guild.members.filter(o => o.presence.status === 'offline').size} ${client.emojis.get('647797712045211673')}${message.guild.members.filter(o => o.presence.status === 'idle').size} ${client.emojis.get('647797747747127318')}${message.guild.members.filter(o => o.presence.status === 'online').size} ${client.emojis.get('647797797671927818')}${message.guild.members.filter(o => o.presence.status === 'dnd').size}`,false)
-   .addField('Sunucu Bölgesi:', message.guild.region, true) 
-   .addField('Rol sayısı',message.guild.roles.size,true)
-   .addField('Sahibi:', message.guild.owner+``+`\n(`+message.guild.ownerID+`)`, true)//elleme
-   .addField('Katılma Tarihi',  message.guild.owner.user.createdAt.toUTCString().replace("Nov", "Kasım").replace("Jan", "Ocak").replace("Feb", "Şubat").replace("Mar", "Mart").replace("Aug", "Ağustos").replace("Sep", "Eylül").replace("Oct", "Ekim").replace("Fri", "Cuma").replace("Mon", "Pazartesi").replace("Sun", "Pazar").replace("Sat", "Cumartesi").replace("Tue", "Salı").replace("Wed", "Çarşamba").replace("Thu", "Perşembe"), true)
-   
-   .addField('Oluşturma tarihi:', message.guild.createdAt.toDateString().replace("Nov", "Kasım").replace("Jan", "Ocak").replace("Feb", "Şubat").replace("Mar", "Mart").replace("Aug", "Ağustos").replace("Sep", "Eylül").replace("Oct", "Ekim").replace("Fri", "Cuma").replace("Mon", "Pazartesi").replace("Sun", "Pazar").replace("Sat", "Cumartesi").replace("Tue", "Salı").replace("Wed", "Çarşamba").replace("Thu", "Perşembe"), true)
-  .setTimestamp()
-
+  const db = require('quick.db');
+  
+  
+  
  
-   const roller = new Discord.RichEmbed()
-   .setColor('15f153')
-   .setDescription(`Tüm Roller: `+message.guild.roles.filter(r => r.name).map(r => r).join(', '))
+     var s = 'tr'
+  var a = bot.commands.get('istatistik').help.name
+    if(db.has(`dil_${message.guild.id}`) === true) {
+        var s = 'en'
+        var a = bot.commands.get('istatistik').help.enname
+    }
+    const dil = bot[s]
+    const o = a
+ 
+  
+  var m = await message.channel.send(`${dil.wait}`)
+  var osType = await os.type();
+
+		if (osType === 'Darwin') osType = 'macOS'
+		else if (osType === 'Windows') osType = 'Windows'
+		else osType = os.type();
+  
+    //--------------------------//
+  
+    var osBit = await os.arch();
+  
+    if (osBit === 'x64') osBit = '64 Bit'
+    else if (osBit === 'x82') osBit = '32 Bit'
+    else osBit = os.arch();
+  
+    let cpuLol;
+    cpuStat.usagePercent(function(err, percent, seconds) {
+        if (err) {
+            return console.log(err);
+        }
+        const duration = moment.duration(bot.uptime).format(`${dil.stat.uptime}`);
+      
+      setTimeout(() => {
+        const s = new Discord.RichEmbed()
+        .setColor("RANDOM")
+        .setAuthor(`${bot.user.username} | ${dil.stat.istatistik}`, bot.user.avatarURL)
+        .addField(`${dil.stat.pingshead}`, `${dil.stat.pings}`.replace("{ping1}", new Date().getTime() - message.createdTimestamp).replace("{ping2}", bot.ping), true)
+        .addField(`${dil.stat.uptimehead}`, `${duration}`, true)
+        .addField(`${dil.stat.data}`, stripIndents`
+   **${dil.stat.voice}** ${bot.voiceConnections.size.toLocaleString()}
+        **${dil.stat.users}**  ${bot.guilds.reduce((a, b) => a + b.memberCount, 0).toLocaleString()}
+        **${dil.stat.guilds}** ${bot.guilds.size.toLocaleString()}
+        **${dil.stat.channels}** ${bot.channels.size.toLocaleString()}
+        `, true)
+        .addField(`${dil.stat.surums.version}`, stripIndents`
+        **${dil.stat.surums.bot}** v${bot.ayarlar.versiyon}
+        **${dil.stat.surums.discord}** v${Discord.version}
+        **${dil.stat.surums.node}** ${process.version}
+        `, true)
+        .addField(`${dil.stat.bellek}`, `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024).toLocaleString()} MB`, true)
+        .addField(`${dil.stat.isletim}`, `${osType} ${osBit}`, true)
+        
+        .addField(`${dil.stat.islemci}`, `\`\`\`xl\n${os.cpus().map(i => `${i.model}`)[0]}\n\`\`\``)
+        return m.edit(s)
    
-   const emojiler = new Discord.RichEmbed()
-   .setColor('15f153')
-   .setDescription(`Tüm Emojiler:`+ message.guild.emojis.map(e=>e.toString()).join(" "))
-   message.channel.send({embed});
-   message.channel.send(roller);
-   message.channel.send(emojiler)
- };
+        }, 3000)
+        
+    });
+};
 
- exports.conf = {
-   enabled: true,
-   guildOnly: false,
-   aliases: ["istatistik"],
-   permLevel: 0
- };
-
- exports.help = {
-   name: 'sunucubilgi',
-   description: 'Kullanılan Yerdeki Sunucu Bilgilerini Gösterir.',
-   usage: 'bilgi'
- };
+exports.conf = {
+    enabled: true,
+    guildOnly: false,
+    aliases: ['i','info'],
+    permLevel: 0,
+    kategori: "bot",
+ 
+  };
+  
+  exports.help = {
+    name: 'istatistik',
+    description: 'Botun istatistiklerini gösterir.',
+    usage: 'istatistik',
+  
+  };
